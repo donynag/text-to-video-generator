@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to Video Generator - Create Videos from Your Words</title>
+    <title>Text to Video Generator</title>
     <style>
         * {
             margin: 0;
@@ -293,7 +293,7 @@
             </div>
         </div>
         
-        <button class="generate-btn" onclick="generateVideo()">
+        <button class="generate-btn" id="generateBtn">
             🎥 Generate Video
         </button>
         
@@ -312,99 +312,70 @@
         
         <div class="examples">
             <h3>💡 Example Prompts:</h3>
-            <div class="example-item" onclick="useExample(this)">
+            <div class="example-item">
                 A majestic eagle soaring through mountain peaks at golden hour
             </div>
-            <div class="example-item" onclick="useExample(this)">
+            <div class="example-item">
                 Neon-lit cyberpunk city street with rain reflections at night
             </div>
-            <div class="example-item" onclick="useExample(this)">
+            <div class="example-item">
                 Peaceful zen garden with cherry blossoms falling gently
             </div>
-            <div class="example-item" onclick="useExample(this)">
+            <div class="example-item">
                 Astronaut floating in space with Earth in the background
             </div>
         </div>
     </div>
     
     <script>
-        function useExample(element) {
-            document.getElementById('textInput').value = element.textContent.trim();
-        }
-        
-        async function generateVideo() {
-            const textInput = document.getElementById('textInput').value.trim();
-            const duration = parseInt(document.getElementById('duration').value);
-            const aspectRatio = document.getElementById('aspectRatio').value;
-            
+        document.addEventListener('DOMContentLoaded', function() {
+            const textInput = document.getElementById('textInput');
+            const generateBtn = document.getElementById('generateBtn');
             const statusDiv = document.getElementById('status');
             const loader = document.getElementById('loader');
-            const generateBtn = document.querySelector('.generate-btn');
             const videoResult = document.getElementById('videoResult');
             
-            if (!textInput) {
-                statusDiv.className = 'status error';
-                statusDiv.textContent = '⚠️ Please enter some text to generate a video!';
-                return;
-            }
-            
-            // Show loading state
-            generateBtn.disabled = true;
-            loader.classList.add('show');
-            statusDiv.className = 'status loading';
-            statusDiv.textContent = '🎬 Creating your video... This may take 1-2 minutes. Please wait!';
-            videoResult.classList.remove('show');
-            
-            try {
-                // Note: This is a demo. In production, you'd need a backend API
-                // to handle the Bhindi API calls securely
-                statusDiv.textContent = '✨ Generating video with AI... Almost there!';
-                
-                // Simulated API call - Replace with actual backend endpoint
-                const response = await fetch('YOUR_BACKEND_API_ENDPOINT', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        prompt: textInput,
-                        durationSeconds: duration,
-                        aspectRatio: aspectRatio
-                    })
+            // Example click handlers
+            document.querySelectorAll('.example-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    textInput.value = this.textContent.trim();
                 });
+            });
+            
+            // Generate button handler
+            generateBtn.addEventListener('click', function() {
+                const text = textInput.value.trim();
+                const duration = document.getElementById('duration').value;
+                const aspectRatio = document.getElementById('aspectRatio').value;
                 
-                if (!response.ok) {
-                    throw new Error('Video generation failed');
+                if (!text) {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '⚠️ Please enter some text to generate a video!';
+                    return;
                 }
                 
-                const data = await response.json();
+                generateBtn.disabled = true;
+                loader.classList.add('show');
+                statusDiv.className = 'status loading';
+                statusDiv.textContent = '🎬 Creating your video... This may take 1-2 minutes. Please wait!';
+                videoResult.classList.remove('show');
                 
-                // Display the video
-                const videoPlayer = document.getElementById('videoPlayer');
-                const downloadBtn = document.getElementById('downloadBtn');
-                
-                videoPlayer.src = data.videoUrl;
-                downloadBtn.href = data.videoUrl;
-                
-                videoResult.classList.add('show');
-                statusDiv.className = 'status success';
-                statusDiv.textContent = '✅ Video generated successfully!';
-                
-            } catch (error) {
-                statusDiv.className = 'status error';
-                statusDiv.textContent = '❌ Note: This is a demo interface. To make it fully functional, you need to:\n\n1. Set up a backend server\n2. Add your Bhindi API credentials\n3. Connect the Kling Video API\n\nContact the developer for implementation!';
-            } finally {
-                loader.classList.remove('show');
-                generateBtn.disabled = false;
-            }
-        }
-        
-        // Allow Enter key to submit (with Shift+Enter for new line)
-        document.getElementById('textInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                generateVideo();
-            }
+                // Demo message
+                setTimeout(function() {
+                    loader.classList.remove('show');
+                    generateBtn.disabled = false;
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = '📝 <strong>Demo Interface</strong><br><br>To make this fully functional, you need:<br>1. Backend server setup<br>2. Bhindi API integration<br>3. Video generation API connection<br><br>Contact your developer for implementation!';
+                }, 2000);
+            });
+            
+            // Enter key handler
+            textInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    generateBtn.click();
+                }
+            });
         });
     </script>
 </body>
