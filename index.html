@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Video Generator - Create Videos from Your Words</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .option-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+            display: block;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        .video-result {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .video-result.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        video {
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .download-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        
+        .loader.show {
+            display: block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .examples h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .example-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .example-item:hover {
+            background: #e9ecef;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Text to Video Generator</h1>
+        <p class="subtitle">Transform your words into stunning videos with AI</p>
+        
+        <div class="input-section">
+            <label for="textInput">✍️ Enter Your Text:</label>
+            <textarea 
+                id="textInput" 
+                placeholder="Describe the video you want to create... e.g., 'A serene sunset over the ocean with waves gently crashing on the shore'"
+            ></textarea>
+        </div>
+        
+        <div class="options">
+            <div class="option-group">
+                <label for="duration">⏱️ Duration:</label>
+                <select id="duration">
+                    <option value="5">5 seconds</option>
+                    <option value="10">10 seconds</option>
+                </select>
+            </div>
+            
+            <div class="option-group">
+                <label for="aspectRatio">📐 Aspect Ratio:</label>
+                <select id="aspectRatio">
+                    <option value="16:9">16:9 (Landscape)</option>
+                    <option value="9:16">9:16 (Portrait)</option>
+                    <option value="1:1">1:1 (Square)</option>
+                </select>
+            </div>
+        </div>
+        
+        <button class="generate-btn" onclick="generateVideo()">
+            🎥 Generate Video
+        </button>
+        
+        <div class="loader" id="loader"></div>
+        <div class="status" id="status"></div>
+        
+        <div class="video-result" id="videoResult">
+            <h3 style="color: #667eea; margin-bottom: 15px;">Your Generated Video:</h3>
+            <video id="videoPlayer" controls></video>
+            <div style="text-align: center;">
+                <a class="download-btn" id="downloadBtn" download="generated-video.mp4">
+                    ⬇️ Download Video
+                </a>
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h3>💡 Example Prompts:</h3>
+            <div class="example-item" onclick="useExample(this)">
+                A majestic eagle soaring through mountain peaks at golden hour
+            </div>
+            <div class="example-item" onclick="useExample(this)">
+                Neon-lit cyberpunk city street with rain reflections at night
+            </div>
+            <div class="example-item" onclick="useExample(this)">
+                Peaceful zen garden with cherry blossoms falling gently
+            </div>
+            <div class="example-item" onclick="useExample(this)">
+                Astronaut floating in space with Earth in the background
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function useExample(element) {
+            document.getElementById('textInput').value = element.textContent.trim();
+        }
+        
+        async function generateVideo() {
+            const textInput = document.getElementById('textInput').value.trim();
+            const duration = parseInt(document.getElementById('duration').value);
+            const aspectRatio = document.getElementById('aspectRatio').value;
+            
+            const statusDiv = document.getElementById('status');
+            const loader = document.getElementById('loader');
+            const generateBtn = document.querySelector('.generate-btn');
+            const videoResult = document.getElementById('videoResult');
+            
+            if (!textInput) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '⚠️ Please enter some text to generate a video!';
+                return;
+            }
+            
+            // Show loading state
+            generateBtn.disabled = true;
+            loader.classList.add('show');
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = '🎬 Creating your video... This may take 1-2 minutes. Please wait!';
+            videoResult.classList.remove('show');
+            
+            try {
+                // Note: This is a demo. In production, you'd need a backend API
+                // to handle the Bhindi API calls securely
+                statusDiv.textContent = '✨ Generating video with AI... Almost there!';
+                
+                // Simulated API call - Replace with actual backend endpoint
+                const response = await fetch('YOUR_BACKEND_API_ENDPOINT', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: textInput,
+                        durationSeconds: duration,
+                        aspectRatio: aspectRatio
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Video generation failed');
+                }
+                
+                const data = await response.json();
+                
+                // Display the video
+                const videoPlayer = document.getElementById('videoPlayer');
+                const downloadBtn = document.getElementById('downloadBtn');
+                
+                videoPlayer.src = data.videoUrl;
+                downloadBtn.href = data.videoUrl;
+                
+                videoResult.classList.add('show');
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Video generated successfully!';
+                
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Note: This is a demo interface. To make it fully functional, you need to:\n\n1. Set up a backend server\n2. Add your Bhindi API credentials\n3. Connect the Kling Video API\n\nContact the developer for implementation!';
+            } finally {
+                loader.classList.remove('show');
+                generateBtn.disabled = false;
+            }
+        }
+        
+        // Allow Enter key to submit (with Shift+Enter for new line)
+        document.getElementById('textInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                generateVideo();
+            }
+        });
+    </script>
+</body>
+</html>
