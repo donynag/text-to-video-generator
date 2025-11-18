@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to Video Generator</title>
+    <title>AI Video Generator - Powered by Bhindi</title>
     <style>
         * {
             margin: 0;
@@ -25,7 +25,7 @@
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 40px;
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: fadeIn 0.5s ease-in;
@@ -49,6 +49,34 @@
             color: #666;
             margin-bottom: 30px;
             font-size: 1.1em;
+        }
+        
+        .api-setup {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .api-setup h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .api-setup input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .api-setup small {
+            color: #666;
+            display: block;
+            margin-top: 8px;
         }
         
         .input-section {
@@ -122,7 +150,7 @@
             letter-spacing: 1px;
         }
         
-        .generate-btn:hover {
+        .generate-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
@@ -135,6 +163,7 @@
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+            opacity: 0.6;
         }
         
         .status {
@@ -144,6 +173,7 @@
             text-align: center;
             font-weight: 500;
             display: none;
+            white-space: pre-line;
         }
         
         .status.loading {
@@ -183,6 +213,7 @@
             width: 100%;
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            background: #000;
         }
         
         .download-btn {
@@ -205,8 +236,8 @@
             border: 4px solid #f3f3f3;
             border-top: 4px solid #667eea;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
             display: none;
@@ -219,6 +250,37 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        .progress {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .progress.show {
+            display: block;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
         }
         
         .examples {
@@ -263,14 +325,21 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎬 Text to Video Generator</h1>
-        <p class="subtitle">Transform your words into stunning videos with AI</p>
+        <h1>🎬 AI Video Generator</h1>
+        <p class="subtitle">Transform your words into stunning videos with AI - Powered by Bhindi</p>
+        
+        <div class="api-setup">
+            <h3>🔑 Setup (One-time)</h3>
+            <p style="color: #666; margin-bottom: 10px;">Enter your Bhindi Chat ID to enable video generation:</p>
+            <input type="text" id="chatId" placeholder="Enter your Bhindi Chat ID (e.g., 07af36a0dc1940)" />
+            <small>💡 Get your Chat ID from Bhindi dashboard or current chat URL</small>
+        </div>
         
         <div class="input-section">
-            <label for="textInput">✍️ Enter Your Text:</label>
+            <label for="textInput">✍️ Describe Your Video:</label>
             <textarea 
                 id="textInput" 
-                placeholder="Describe the video you want to create... e.g., 'A serene sunset over the ocean with waves gently crashing on the shore'"
+                placeholder="Be detailed! e.g., 'A serene sunset over the ocean with golden rays reflecting on gentle waves, seagulls flying in the distance, peaceful and cinematic'"
             ></textarea>
         </div>
         
@@ -287,95 +356,232 @@
                 <label for="aspectRatio">📐 Aspect Ratio:</label>
                 <select id="aspectRatio">
                     <option value="16:9">16:9 (Landscape)</option>
-                    <option value="9:16">9:16 (Portrait)</option>
-                    <option value="1:1">1:1 (Square)</option>
+                    <option value="9:16">9:16 (Portrait/TikTok)</option>
+                    <option value="1:1">1:1 (Square/Instagram)</option>
                 </select>
             </div>
         </div>
         
         <button class="generate-btn" id="generateBtn">
-            🎥 Generate Video
+            🎥 Generate Video with AI
         </button>
         
         <div class="loader" id="loader"></div>
+        
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+        </div>
+        
         <div class="status" id="status"></div>
         
         <div class="video-result" id="videoResult">
-            <h3 style="color: #667eea; margin-bottom: 15px;">Your Generated Video:</h3>
-            <video id="videoPlayer" controls></video>
+            <h3 style="color: #667eea; margin-bottom: 15px;">✨ Your Generated Video:</h3>
+            <video id="videoPlayer" controls autoplay loop></video>
             <div style="text-align: center;">
-                <a class="download-btn" id="downloadBtn" download="generated-video.mp4">
+                <a class="download-btn" id="downloadBtn" target="_blank">
                     ⬇️ Download Video
                 </a>
             </div>
         </div>
         
         <div class="examples">
-            <h3>💡 Example Prompts:</h3>
+            <h3>💡 Example Prompts (Click to Use):</h3>
             <div class="example-item">
-                A majestic eagle soaring through mountain peaks at golden hour
+                A majestic eagle soaring through snow-capped mountain peaks at golden hour, cinematic and breathtaking
             </div>
             <div class="example-item">
-                Neon-lit cyberpunk city street with rain reflections at night
+                Neon-lit cyberpunk city street with rain reflections at night, people with umbrellas, futuristic atmosphere
             </div>
             <div class="example-item">
-                Peaceful zen garden with cherry blossoms falling gently
+                Peaceful zen garden with cherry blossoms falling gently, koi fish swimming in pond, serene and meditative
             </div>
             <div class="example-item">
-                Astronaut floating in space with Earth in the background
+                Astronaut floating gracefully in space with Earth in the background, stars twinkling, cosmic and awe-inspiring
+            </div>
+            <div class="example-item">
+                Cozy coffee shop interior with warm lighting, steam rising from cup, rain on windows, comfortable ambiance
             </div>
         </div>
     </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        // API Configuration
+        const BHINDI_API_BASE = 'https://api.bhindi.io';
+        
+        // Save chat ID to localStorage
+        const chatIdInput = document.getElementById('chatId');
+        const savedChatId = localStorage.getItem('bhindiChatId');
+        if (savedChatId) {
+            chatIdInput.value = savedChatId;
+        }
+        
+        chatIdInput.addEventListener('change', function() {
+            localStorage.setItem('bhindiChatId', this.value.trim());
+        });
+        
+        // Example click handlers
+        document.querySelectorAll('.example-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                document.getElementById('textInput').value = this.textContent.trim();
+            });
+        });
+        
+        // Progress simulation
+        function simulateProgress(duration) {
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            progressDiv.classList.add('show');
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 95) progress = 95;
+                progressFill.style.width = progress + '%';
+                progressFill.textContent = Math.floor(progress) + '%';
+            }, duration / 20);
+            
+            return interval;
+        }
+        
+        // Generate Video Function
+        document.getElementById('generateBtn').addEventListener('click', async function() {
             const textInput = document.getElementById('textInput');
-            const generateBtn = document.getElementById('generateBtn');
+            const chatId = chatIdInput.value.trim();
+            const text = textInput.value.trim();
+            const duration = parseInt(document.getElementById('duration').value);
+            const aspectRatio = document.getElementById('aspectRatio').value;
+            
             const statusDiv = document.getElementById('status');
             const loader = document.getElementById('loader');
+            const generateBtn = this;
             const videoResult = document.getElementById('videoResult');
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
             
-            // Example click handlers
-            document.querySelectorAll('.example-item').forEach(function(item) {
-                item.addEventListener('click', function() {
-                    textInput.value = this.textContent.trim();
+            // Validation
+            if (!chatId) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '⚠️ Please enter your Bhindi Chat ID first!';
+                chatIdInput.focus();
+                return;
+            }
+            
+            if (!text) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '⚠️ Please describe the video you want to create!';
+                textInput.focus();
+                return;
+            }
+            
+            // Start generation
+            generateBtn.disabled = true;
+            loader.classList.add('show');
+            videoResult.classList.remove('show');
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = '🎬 Initializing AI video generation...\nThis will take 60-120 seconds. Please wait!';
+            
+            const progressInterval = simulateProgress(90000);
+            
+            try {
+                // Step 1: Generate video
+                statusDiv.textContent = '🎨 Creating your video with AI...\nAnalyzing your prompt and generating frames...';
+                
+                const generateResponse = await fetch(`${BHINDI_API_BASE}/v1/kling-video/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-chat-id': chatId
+                    },
+                    body: JSON.stringify({
+                        prompt: text,
+                        durationSeconds: duration,
+                        aspectRatio: aspectRatio
+                    })
                 });
-            });
-            
-            // Generate button handler
-            generateBtn.addEventListener('click', function() {
-                const text = textInput.value.trim();
-                const duration = document.getElementById('duration').value;
-                const aspectRatio = document.getElementById('aspectRatio').value;
                 
-                if (!text) {
-                    statusDiv.className = 'status error';
-                    statusDiv.textContent = '⚠️ Please enter some text to generate a video!';
-                    return;
+                if (!generateResponse.ok) {
+                    const errorData = await generateResponse.json();
+                    throw new Error(errorData.error || 'Failed to start video generation');
                 }
                 
-                generateBtn.disabled = true;
-                loader.classList.add('show');
-                statusDiv.className = 'status loading';
-                statusDiv.textContent = '🎬 Creating your video... This may take 1-2 minutes. Please wait!';
-                videoResult.classList.remove('show');
+                const generateData = await generateResponse.json();
+                const requestId = generateData.data.requestId;
                 
-                // Demo message
-                setTimeout(function() {
-                    loader.classList.remove('show');
-                    generateBtn.disabled = false;
-                    statusDiv.className = 'status error';
-                    statusDiv.innerHTML = '📝 <strong>Demo Interface</strong><br><br>To make this fully functional, you need:<br>1. Backend server setup<br>2. Bhindi API integration<br>3. Video generation API connection<br><br>Contact your developer for implementation!';
-                }, 2000);
-            });
-            
-            // Enter key handler
-            textInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    generateBtn.click();
+                statusDiv.textContent = '⏳ Video is being generated...\nRequest ID: ' + requestId + '\nChecking status...';
+                
+                // Step 2: Poll for completion
+                let attempts = 0;
+                const maxAttempts = 60; // 3 minutes max
+                
+                while (attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+                    
+                    const statusResponse = await fetch(`${BHINDI_API_BASE}/v1/kling-video/status/${requestId}`, {
+                        headers: {
+                            'x-chat-id': chatId
+                        }
+                    });
+                    
+                    if (!statusResponse.ok) {
+                        throw new Error('Failed to check video status');
+                    }
+                    
+                    const statusData = await statusResponse.json();
+                    const status = statusData.data.status;
+                    
+                    statusDiv.textContent = `🎬 Status: ${status}\nAttempt ${attempts + 1}/${maxAttempts}\nPlease wait...`;
+                    
+                    if (status === 'completed' && statusData.data.videoUrl) {
+                        clearInterval(progressInterval);
+                        progressFill.style.width = '100%';
+                        progressFill.textContent = '100%';
+                        
+                        // Display video
+                        const videoPlayer = document.getElementById('videoPlayer');
+                        const downloadBtn = document.getElementById('downloadBtn');
+                        
+                        videoPlayer.src = statusData.data.videoUrl;
+                        downloadBtn.href = statusData.data.videoUrl;
+                        
+                        videoResult.classList.add('show');
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = '✅ Video generated successfully!\nYour AI-powered video is ready!';
+                        
+                        setTimeout(() => {
+                            progressDiv.classList.remove('show');
+                        }, 2000);
+                        
+                        break;
+                    } else if (status === 'failed') {
+                        throw new Error('Video generation failed');
+                    }
+                    
+                    attempts++;
                 }
-            });
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('Video generation timed out. Please try again.');
+                }
+                
+            } catch (error) {
+                clearInterval(progressInterval);
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '❌ Error: ' + error.message + '\n\nPlease check:\n1. Your Chat ID is correct\n2. You have Bhindi API access\n3. Try again with a different prompt';
+                progressDiv.classList.remove('show');
+            } finally {
+                loader.classList.remove('show');
+                generateBtn.disabled = false;
+            }
+        });
+        
+        // Enter key handler
+        document.getElementById('textInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                document.getElementById('generateBtn').click();
+            }
         });
     </script>
 </body>
